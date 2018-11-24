@@ -143,6 +143,7 @@ class App extends Component {
       this.setState(state => {
         return {
           ...state,
+          reminderInputValue: this.INITIAL_STATE.reminderInputValue,
           reminders: this.reminderStateReducer(state.reminders, [response.reminder])
         };
       });
