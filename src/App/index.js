@@ -51,47 +51,62 @@ class App extends Component {
     if (token) {
       slack.reminders.list({ token })
         .then(response => {
-          const reminders = response.reminders.reduce(
-            (acc, reminder) => {
-              // recurring
-              if (reminder.recurring) {
-                return {
-                  ...acc,
-                  recurring: acc.recurring.concat(reminder)
-                };
-              } else {
-                const newReminder = {
-                  ...reminder,
-                  time: reminder.time * 1000
-                };
-
-                // complete
-                if (reminder.complete_ts > 0) {
-                  return {
-                    ...acc,
-                    complete: acc.complete.concat(newReminder)
-                  };
-                // upcoming
-                } else if (new Date(reminder.time * 1000) > Date.now()) {
-                  return {
-                    ...acc,
-                    upcoming: acc.upcoming.concat(newReminder)
-                  };
-                // past
-                } else {
-                  return {
-                    ...acc,
-                    past: acc.past.concat(newReminder)
-                  };
-                }
-              }
-            },
-            this.INITIAL_STATE.reminders
+          const reminders = this.reminderStateReducer(
+            this.INITIAL_STATE.reminders,
+            response.reminders
           );
 
           this.setState({ reminders });
         });
     }
+  }
+
+  /**
+   * Adds reminders to state
+   *
+   * @param {Object} state Existing state
+   * @param {Object[]} reminders Reminders to add
+   *
+   * @returns New state of reminders
+   */
+  reminderStateReducer = (state, reminders) => {
+    return reminders.reduce(
+      (acc, reminder) => {
+        // recurring
+        if (reminder.recurring) {
+          return {
+            ...acc,
+            recurring: acc.recurring.concat(reminder)
+          };
+        } else {
+          const newReminder = {
+            ...reminder,
+            time: reminder.time * 1000
+          };
+
+          // complete
+          if (reminder.complete_ts > 0) {
+            return {
+              ...acc,
+              complete: acc.complete.concat(newReminder)
+            };
+            // upcoming
+          } else if (new Date(newReminder.time) > Date.now()) {
+            return {
+              ...acc,
+              upcoming: acc.upcoming.concat(newReminder)
+            };
+            // past
+          } else {
+            return {
+              ...acc,
+              past: acc.past.concat(newReminder)
+            };
+          }
+        }
+      },
+      state
+    );
   }
 
   handleLogoutClicked = () => {
@@ -119,19 +134,19 @@ class App extends Component {
   }
 
   addReminder = () => {
-    this.setState(state => {
-      const text = this.state.reminderInputValue;
-      const reminders = this.state.reminders;
-      const id = reminders[reminders.length - 1].id + 1;
-
-      return {
-        reminderInputValue: this.INITIAL_STATE.reminderInputValue,
-        reminders: [
-          ...state.reminders,
-          { id, text }
-        ]
-      }
-    });
+    slack.reminders.add({
+      token: this.state.accessToken,
+      text: this.state.reminderInputValue,
+      time: 'tomorrow'
+    })
+    .then(response => {
+      this.setState(state => {
+        return {
+          ...state,
+          reminders: this.reminderStateReducer(state.reminders, [response.reminder])
+        };
+      });
+    })
   }
 
   loadAccessToken = () => {
