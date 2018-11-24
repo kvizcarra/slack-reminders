@@ -133,6 +133,12 @@ class App extends Component {
     window.location = url;
   }
 
+  handleReminderInputKeyPress = (event) => {
+    if (event.key === 'Enter') {
+      this.addReminder();
+    }
+  }
+
   addReminder = () => {
     slack.reminders.add({
       token: this.state.accessToken,
@@ -197,6 +203,7 @@ class App extends Component {
           <input
             name="reminderInput"
             onChange={this.handleReminderInputChange}
+            onKeyPress={this.handleReminderInputKeyPress}
             value={reminderInputValue}
             placeholder="Add a reminder"
           />
