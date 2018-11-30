@@ -1,0 +1,3 @@
+export const CLIENT_ID = process.env.REACT_APP_SLACK_API_CLIENT_ID;
+export const CLIENT_SECRET = process.env.REACT_APP_SLACK_API_CLIENT_SECRET;
+export const REDIRECT_URI = process.env.REACT_APP_SLACK_API_REDIRECT_URI;
