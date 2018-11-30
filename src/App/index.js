@@ -2,10 +2,8 @@ import React, { Component } from 'react';
 import slack from 'slack';
 import queryString from "query-string";
 import ReminderList from '../ReminderList';
-
-const CLIENT_ID = process.env.REACT_APP_SLACK_API_CLIENT_ID;
-const CLIENT_SECRET = process.env.REACT_APP_SLACK_API_CLIENT_SECRET;
-const REDIRECT_URI = process.env.REACT_APP_SLACK_API_REDIRECT_URI;
+import { CLIENT_ID, REDIRECT_URI } from '../slackEnvVars';
+import { login, logout } from '../slackAuth';
 
 class App extends Component {
   INITIAL_STATE = {
@@ -22,42 +20,35 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = this.INITIAL_STATE;
+  }
 
+  componentDidMount() {
     const currentUrl = new URL(window.location.href);
     if (currentUrl.searchParams.has('code')) {
       const code = currentUrl.searchParams.get('code');
 
-      slack.oauth.access({
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        code,
-        redirect_uri: REDIRECT_URI
-      })
-        .then(response => {
-          console.log('response ', response);
-          const { access_token } = response;
-
-          this.setAccessToken(access_token);
-          window.location = REDIRECT_URI;
+      login(code)
+        .then(() => {
+          window.location = '/';
         });
     } else if (currentUrl.searchParams.has('error')) {
       console.error('There was an error authenticating with Slack', currentUrl.searchParams.get('error'));
-    }
-  }
+    } else {
+      const token = localStorage.getItem('access_token');
 
-  componentDidMount() {
-    const token = this.loadAccessToken();
+      if (token) {
+        this.setState({ accessToken: token });
 
-    if (token) {
-      slack.reminders.list({ token })
-        .then(response => {
-          const reminders = this.reminderStateReducer(
-            this.INITIAL_STATE.reminders,
-            response.reminders
-          );
+        slack.reminders.list({ token })
+          .then(response => {
+            const reminders = this.reminderStateReducer(
+              this.INITIAL_STATE.reminders,
+              response.reminders
+            );
 
-          this.setState({ reminders });
-        });
+            this.setState({ reminders });
+          });
+      }
     }
   }
 
@@ -110,7 +101,7 @@ class App extends Component {
   }
 
   handleLogoutClicked = () => {
-    this.clearAccessToken();
+    logout();
     this.setState(this.INITIAL_STATE);
   };
 
@@ -154,28 +145,6 @@ class App extends Component {
         };
       });
     })
-  }
-
-  loadAccessToken = () => {
-    const accessToken = localStorage.getItem('access_token');
-
-    if (accessToken) {
-      this.setState({ accessToken });
-      return accessToken;
-    } else {
-      this.clearAccessToken();
-      return null;
-    }
-  }
-
-  setAccessToken = accessToken => {
-    localStorage.setItem('access_token', accessToken);
-    this.setState({ accessToken });
-  }
-
-  clearAccessToken = () => {
-    localStorage.removeItem('access_token');
-    this.setState({ accessToken: this.INITIAL_STATE.accessToken });
   }
 
   render() {
