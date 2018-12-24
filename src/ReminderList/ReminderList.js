@@ -1,15 +1,14 @@
 import React from 'react';
+import ReminderItem from '../ReminderItem';
 
 const ReminderList = ({ reminders = [] }) => {
   return (
     <ul>
       {reminders.map(reminder => (
         <li key={reminder.id}>
-          {reminder.text}
-
-          {reminder.time
-            ? <em style={{marginLeft: 20}}>{(new Date(reminder.time)).toDateString()}</em>
-            : null}
+          <ReminderItem
+            date={reminder.time ? new Date(reminder.time) : null}
+            {...reminder}/>
         </li>
       ))}
     </ul>
