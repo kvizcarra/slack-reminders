@@ -6,4 +6,5 @@ A React app for the `/remind` feature in Slack. https://slack-reminders.netlify.
 ## Tech Specs
 * React
 * Redux
+* [Slack](https://github.com/smallwins/slack)
 * Netlify
