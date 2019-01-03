@@ -1,10 +1,11 @@
 import { Component } from "react";
-import { login } from "../slackAuth";
+import { connect } from "react-redux";
+import { login } from "../redux/actions";
 import queryString from "query-string";
 
 class AuthCodeReceiver extends Component {
   componentDidMount() {
-    const { location, navigate } = this.props;
+    const { location, navigate, login } = this.props;
     const { code, error } = queryString.parse(location.search);
 
     if (code) {
@@ -18,4 +19,4 @@ class AuthCodeReceiver extends Component {
   render() { return null; }
 }
 
-export default AuthCodeReceiver;
+export default connect(null, { login })(AuthCodeReceiver);
