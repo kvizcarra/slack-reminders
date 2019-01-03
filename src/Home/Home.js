@@ -1,20 +1,14 @@
 import React, { Component } from 'react';
-import slack from 'slack';
 import queryString from "query-string";
 import ReminderList from '../ReminderList';
 import { CLIENT_ID, REDIRECT_URI } from '../slackEnvVars';
-import { logout } from '../slackAuth';
+import { connect } from "react-redux";
+import * as actionCreators from "../redux/actions";
+import { UPCOMING, RECURRING, PAST, COMPLETE } from '../reminderTypes';
 
 class Home extends Component {
   INITIAL_STATE = {
-    accessToken: null,
-    reminderInputValue: '',
-    reminders: {
-      upcoming: [],
-      recurring: [],
-      past: [],
-      complete: []
-    }
+    reminderInputValue: ''
   };
 
   constructor(props) {
@@ -23,73 +17,15 @@ class Home extends Component {
   }
 
   componentDidMount() {
-    const token = localStorage.getItem('access_token');
+    const { accessToken } = this.props;
 
-    if (token) {
-      this.setState({ accessToken: token });
-
-      slack.reminders.list({ token })
-        .then(response => {
-          const reminders = this.reminderStateReducer(
-            this.INITIAL_STATE.reminders,
-            response.reminders
-          );
-
-          this.setState({ reminders });
-        });
+    if (accessToken) {
+      this.props.loadReminders(accessToken);
     }
   }
 
-  /**
-   * Adds reminders to state
-   *
-   * @param {Object} state Existing state
-   * @param {Object[]} reminders Reminders to add
-   *
-   * @returns New state of reminders
-   */
-  reminderStateReducer = (state, reminders) => {
-    return reminders.reduce(
-      (acc, reminder) => {
-        // recurring
-        if (reminder.recurring) {
-          return {
-            ...acc,
-            recurring: acc.recurring.concat(reminder)
-          };
-        } else {
-          const newReminder = {
-            ...reminder,
-            time: reminder.time * 1000
-          };
-
-          // complete
-          if (reminder.complete_ts > 0) {
-            return {
-              ...acc,
-              complete: acc.complete.concat(newReminder)
-            };
-            // upcoming
-          } else if (new Date(newReminder.time) > Date.now()) {
-            return {
-              ...acc,
-              upcoming: acc.upcoming.concat(newReminder)
-            };
-            // past
-          } else {
-            return {
-              ...acc,
-              past: acc.past.concat(newReminder)
-            };
-          }
-        }
-      },
-      state
-    );
-  }
-
   handleLogoutClicked = () => {
-    logout();
+    this.props.logout();
     this.setState(this.INITIAL_STATE);
   };
 
@@ -119,30 +55,26 @@ class Home extends Component {
   }
 
   addReminder = () => {
-    slack.reminders.add({
-      token: this.state.accessToken,
-      text: this.state.reminderInputValue,
-      time: 'tomorrow'
-    })
-      .then(response => {
+    this.props.addReminder(this.props.accessToken, this.state.reminderInputValue)
+      .then(() => {
         this.setState(state => {
           return {
             ...state,
-            reminderInputValue: this.INITIAL_STATE.reminderInputValue,
-            reminders: this.reminderStateReducer(state.reminders, [response.reminder])
+            reminderInputValue: this.INITIAL_STATE.reminderInputValue
           };
         });
-      })
+      });
   }
 
   render() {
-    const { accessToken, reminderInputValue } = this.state;
+    const { reminderInputValue } = this.state;
+    const { accessToken } = this.props;
     const {
       upcoming,
       recurring,
       past,
       complete
-    } = this.state.reminders;
+    } = this.props.reminders;
 
     return (
       <>
@@ -192,4 +124,17 @@ class Home extends Component {
   }
 }
 
-export default Home;
+const mapStateToProps = (state) => {
+  const { reminders } = state;
+
+  return {
+    ...state,
+    reminders: {
+      upcoming: reminders.filter(reminder => reminder.reminderType === UPCOMING),
+      recurring: reminders.filter(reminder => reminder.reminderType === RECURRING),
+      past: reminders.filter(reminder => reminder.reminderType === PAST),
+      complete: reminders.filter(reminder => reminder.reminderType === COMPLETE)
+    }
+  }
+}
+export default connect(mapStateToProps, actionCreators)(Home);
