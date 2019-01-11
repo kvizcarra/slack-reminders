@@ -1,11 +1,13 @@
 import React from "react";
 
-const ReminderItem = ({text, date}) => (<>
+const ReminderItem = ({id, text, date, onDelete}) => (<>
     {text}
 
     {date
     ? <em style={{marginLeft: 20}}>{date.toDateString()}</em>
     : null}
+
+    <button style={{marginLeft: 10}} onClick={() => onDelete(id)}>Delete</button>
 </>);
 
 export default ReminderItem;
