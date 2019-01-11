@@ -66,6 +66,10 @@ class Home extends Component {
       });
   }
 
+  deleteReminder = reminderId => {
+    this.props.deleteReminder(this.props.accessToken, reminderId);
+  }
+
   render() {
     const { reminderInputValue } = this.state;
     const { accessToken } = this.props;
@@ -101,23 +105,23 @@ class Home extends Component {
 
         <h2>Upcoming</h2>
         {upcoming && upcoming.length > 0
-          ? <ReminderList reminders={upcoming} />
+          ? <ReminderList reminders={upcoming} onDelete={this.deleteReminder} />
           : <em>No reminders</em>
         }
 
         {recurring && recurring.length > 0 && (<>
           <h2>Recurring</h2>
-          <ReminderList reminders={recurring} />
+          <ReminderList reminders={recurring} onDelete={this.deleteReminder} />
         </>)}
 
         {past && past.length > 0 && (<>
           <h2>Past and incomplete</h2>
-          <ReminderList reminders={past} />
+          <ReminderList reminders={past} onDelete={this.deleteReminder} />
         </>)}
 
         {complete && complete.length > 0 && (<>
           <h2>Complete</h2>
-          <ReminderList reminders={complete} />
+          <ReminderList reminders={complete} onDelete={this.deleteReminder} />
         </>)}
       </>
     );
