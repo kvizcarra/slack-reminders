@@ -1,20 +1,9 @@
-import { LOAD_REMINDERS, ADD_REMINDER, LOGOUT, LOGIN } from "./actionTypes";
-import { combineReducers } from "redux";
-import { DELETE_REMINDER } from "./actionTypes";
-
-const accessToken = (state = null, action) => {
-  switch (action.type) {
-    case LOGIN: {
-      const { accessToken } = action.payload;
-
-      return accessToken;
-    }
-    case LOGOUT:
-      return null;
-    default:
-      return state;
-  }
-}
+import {
+  LOGOUT,
+  LOAD_REMINDERS,
+  ADD_REMINDER,
+  DELETE_REMINDER
+} from "../actionTypes";
 
 const reminders = (state = [], action) => {
   switch (action.type) {
@@ -38,6 +27,6 @@ const reminders = (state = [], action) => {
     default:
       return state;
   }
-}
+};
 
-export default combineReducers({ accessToken, reminders })
+export default reminders;
