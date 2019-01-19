@@ -10,7 +10,7 @@ class AuthCodeReceiver extends Component {
 
     if (code) {
       login(code)
-        .then(() => navigate('/'));
+        .then(() => navigate('/', { replace: true }));
     } else if (error) {
       console.error('There was an error authenticating with Slack', error);
     }
