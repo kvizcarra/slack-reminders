@@ -1,6 +1,13 @@
 import slack from 'slack';
 import { CLIENT_ID, CLIENT_SECRET, REDIRECT_URI } from '../slackEnvVars';
-import { LOAD_REMINDERS, ADD_REMINDER, LOGOUT, LOGIN, DELETE_REMINDER } from "./actionTypes";
+import {
+  LOAD_REMINDERS,
+  ADD_REMINDER,
+  LOGOUT,
+  LOGIN,
+  DELETE_REMINDER,
+  COMPLETE_REMINDER
+} from "./actionTypes";
 import { toViewModel } from '../reminderTranslator';
 
 export const login = code => dispatch =>
@@ -49,6 +56,20 @@ export const addReminder = (token, text) => dispatch =>
           reminder: toViewModel(response.reminder)
         }
       })
+    });
+
+export const completeReminder = (token, reminderId) => dispatch =>
+  slack.reminders.complete({
+    token,
+    reminder: reminderId
+  })
+    .then(response => {
+      if (response.ok) {
+        dispatch({
+          type: COMPLETE_REMINDER,
+          payload: { reminderId }
+        })
+      }
     });
 
 export const deleteReminder = (token, reminderId) => dispatch =>
