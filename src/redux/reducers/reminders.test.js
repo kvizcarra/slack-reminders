@@ -1,5 +1,12 @@
 import reminders from "./reminders";
-import { LOGOUT, LOAD_REMINDERS, ADD_REMINDER, DELETE_REMINDER } from "../actionTypes";
+import {
+  LOGOUT,
+  LOAD_REMINDERS,
+  ADD_REMINDER,
+  DELETE_REMINDER,
+  COMPLETE_REMINDER
+} from "../actionTypes";
+import { PAST, COMPLETE, UPCOMING, RECURRING } from "../../reminderTypes";
 
 describe('reminders', () => {
   it('returns state for unknown action', () => {
@@ -142,6 +149,75 @@ describe('reminders', () => {
             }
           )
         ).toEqual(['oldone', 'oldtwo', 'oldthree', 'newone']);
+      });
+    });
+  });
+
+  describe('COMPLETE_REMINDER', () => {
+    beforeAll(() => {
+      // Mock Date.now
+      Date.now = jest.fn(() => 1547961510); // 2019-01-19 9:19:30 PM PST
+    });
+
+    describe('with default state', () => {
+      it('keeps default state', () => {
+        expect(
+          reminders(
+            undefined,
+            {
+              type: COMPLETE_REMINDER,
+              payload: {
+                reminderId: 'one1'
+              }
+            }
+          )
+        ).toEqual([]);
+      });
+    });
+
+    describe('with one existing reminder', () => {
+      it('completes reminder', () => {
+        expect(
+          reminders(
+            [
+              { id: 'one1', reminderType: PAST }
+            ],
+            {
+              type: COMPLETE_REMINDER,
+              payload: {
+                reminderId: 'one1'
+              }
+            }
+          )
+        ).toEqual([
+          { id: 'one1', reminderType: COMPLETE, complete_ts: 1547961510 }
+        ]);
+      });
+    });
+
+    describe('with multiple existing reminders', () => {
+      it('completes reminder', () => {
+        expect(
+          reminders(
+            [
+              { id: 'one1', reminderType: UPCOMING },
+              { id: 'two2', reminderType: PAST },
+              { id: 'three3', reminderType: RECURRING },
+              { id: 'four4', reminderType: COMPLETE, complete_ts: 5 }
+            ],
+            {
+              type: COMPLETE_REMINDER,
+              payload: {
+                reminderId: 'one1'
+              }
+            }
+          )
+        ).toEqual([
+          { id: 'one1', reminderType: COMPLETE, complete_ts: 1547961510 },
+          { id: 'two2', reminderType: PAST },
+          { id: 'three3', reminderType: RECURRING },
+          { id: 'four4', reminderType: COMPLETE, complete_ts: 5 }
+        ]);
       });
     });
   });
